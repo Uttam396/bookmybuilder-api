@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\BannerController;
+use App\Http\Controllers\AlertController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -21,23 +23,27 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::get('/home', [UserController::class, 'Index']);
 
+/**Login Routes */
+Route::post('adminlogin', 'LoginController@AdminLogin');
+Route::get('adminlogout', 'LoginController@Adminlogout');
+
 /** Staff Routes */
-Route::get('viewstaff', [StaffController::class, 'ViewStaff']);
-Route::get('viewstaff/{id}', [StaffController::class, 'StaffById']);
-Route::post('addstaff', [StaffController::class, 'AddStaff']);
-Route::put('updatestaff/{id}', [StaffController::class, 'UpdateStaff']);
-Route::delete('deletestaff/{id}', [StaffController::class, 'DeleteStaff']);
+Route::get('staff', [StaffController::class, 'ViewStaff']);
+Route::get('staff/{uid}', [StaffController::class, 'StaffById']);
+Route::post('staff', [StaffController::class, 'AddStaff']);
+Route::put('staff/{uid}', [StaffController::class, 'UpdateStaff']);
+Route::delete('staff/{uid}', [StaffController::class, 'DeleteStaff']);
  
 /** Alerts Routes */
-Route::get('viewalerts', [AlertController::class, 'ViewAlerts']);
-Route::get('viewalert/{id}', [AlertController::class, 'AlertById']);
-Route::post('addalert', [AlertController::class, 'AddAlert']);
-Route::put('updatealert/{id}', [AlertController::class, 'UpdateAlert']);
-Route::delete('deletealert/{id}', [AlertController::class, 'DeleteAlert']);
+Route::get('alert', [AlertController::class, 'ViewAlerts']);
+Route::get('alert/{id}', [AlertController::class, 'AlertById']);
+Route::post('alert', [AlertController::class, 'AddAlert']);
+Route::put('alert/{id}', [AlertController::class, 'UpdateAlert']);
+Route::delete('alert/{id}', [AlertController::class, 'DeleteAlert']);
 
 /**Banner Routes */
-Route::get('viewbanner', [BannerController::class, 'ViewBanner']);
-Route::get('viewbanner/{id}', [BannerController::class, 'BannerById']);
-Route::post('addbanner', [BannerController::class, 'AddBanner']);
-Route::put('updatebanner/{id}', [BannerController::class, 'UpdateBanner']);
-Route::delete('deletebanner/{id}', [BannerController::class, 'DeleteBanner']);
+Route::get('banner', [BannerController::class, 'ViewBanner']);
+Route::get('banner/{id}', [BannerController::class, 'BannerById']);
+Route::post('banner', [BannerController::class, 'AddBanner']);
+Route::put('banner/{id}', [BannerController::class, 'UpdateBanner']);
+Route::delete('banner/{id}', [BannerController::class, 'DeleteBanner']);

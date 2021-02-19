@@ -13,7 +13,7 @@ class BannerController extends Controller
         $validator = Validator::make($request::all(), [
             'title' => 'required',
             'banner_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'hyperlink' => 'required',
+            'hyper_link' => 'required',
            
         ]);
 
@@ -23,7 +23,7 @@ class BannerController extends Controller
 
             $title = request::Input('title'); 
             $banner_image = request::file('banner_image'); 
-            $hyperlink = request::Input('hyperlink'); 
+            $hyperlink = request::Input('hyper_link'); 
            
 
             if(request::hasFile('banner_image')){
@@ -32,7 +32,7 @@ class BannerController extends Controller
 
                 $s3 = \Storage::disk('s3');
                 $fileLocation = $fileDirectory. '/' . $fileName;
-                $s3->put($fileLocation1, file_get_contents($banner_image), 'public');
+                $s3->put($fileLocation, file_get_contents($banner_image), 'public');
             }
            
 
@@ -42,7 +42,7 @@ class BannerController extends Controller
             if(isset($fileLocation)){
                 $bannerdata->banner_image = $fileLocation;
             }
-            $bannerdata-> hyperlink = $hyperlink;
+            $bannerdata-> hyper_link = $hyperlink;
            
             $bannerdata->save();
             return $bannerdata;
@@ -51,11 +51,17 @@ class BannerController extends Controller
 
     public function ViewBanner(Request $request){
         $viewbanners = Banner::orderby('id','DESC')->get();
+        foreach($viewbanners as $key=>$val){
+            {
+                $viewbanners[$key]->banner_image = 'https://bookmybuilder12.s3.ap-south-1.amazonaws.com/'.$viewbanners[0]->banner_image;
+            }   
+         }
         return $viewbanners;
     }
 
     public function BannerById(Request $request, $id){
         $singlebanner = Banner::find($id);
+       
          if(is_null($singlebanner)) {
              return response()->json(['message' => 'Banner not Found'],404);
          }

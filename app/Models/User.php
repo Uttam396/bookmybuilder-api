@@ -16,10 +16,18 @@ class User extends Authenticatable
      *
      * @var array
      */
+    protected  $table = "users"; 
+    protected $primaryKey = 'uid';
     protected $fillable = [
+        'uid',
+        'profile_picture',
         'name',
+        'phone',
         'email',
+        'user_type',
         'password',
+        'remarks',
+        'status'
     ];
 
     /**
@@ -40,4 +48,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function documents(){
+        return $this->hasMany(DocumentImages::class);
+    }
 }

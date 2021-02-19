@@ -1,25 +1,26 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Staff;
+use App\Models\User;
 use Request;
 use Validator;
 use Storage;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class StaffController extends Controller
 {
     public function AddStaff(Request $request){
 
         $validator = Validator::make($request::all(), [
-            'uid' => 'required|min:2|max:6',
+            
             'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'name' => 'required',
-            'phone'=> 'required',
+            'phone'=> 'required|max:10',
             'email' => 'required|email',
             'user_type'=> 'required',
-            'password' => 'required',
-            'confirm_password' => 'required|same:password',
-            'documents' => 'required',
+            'password' => 'required|min:6',
             'remarks' => 'required',
             'status' => 'required' 
 
@@ -34,81 +35,87 @@ class StaffController extends Controller
             $phone = request::Input('phone'); 
             $email = request::Input('email'); 
             $user_type = request::Input('user_type'); 
-            $password = request::Input('password'); 
-            $confirm_password = request::Input('confirm_password'); 
+            $password = Hash::make(request::Input('password')); 
             $documents = request::file('documents'); 
             $remarks = request::Input('remarks'); 
             $status = request::Input('status'); 
 
             if(request::hasFile('profile_picture')){
-                $fileName1 = uniqid() . '.' . $profile_picture->getClientOriginalExtension();
-                $fileDirectory1 = 'uploads';
+                $fileName = uniqid() . '.' . $profile_picture->getClientOriginalExtension();
+                $fileDirectory = 'uploads';
 
                 $s3 = \Storage::disk('s3');
-                $fileLocation1 = $fileDirectory. '/' . $fileName1;
-                $s3->put($fileLocation1, file_get_contents($profile_picture), 'public');
+                $fileLocation = $fileDirectory. '/' . $fileName;
+                $s3->put($fileLocation, file_get_contents($profile_picture), 'public');
             }
-            if(request::hasFile('documents')){
-                $fileName2 = uniqid() . '.' . $documents->getClientOriginalExtension();
-                $fileDirectory2 = 'uploads';
+            // if(request::hasFile('documents')){
+            //     $fileName2 = uniqid() . '.' . $documents->getClientOriginalExtension();
+            //     $fileDirectory2 = 'uploads';
 
-                $s3 = \Storage::disk('s3');
-                $fileLocation2 = $fileDirectory2. '/' . $fileName2;
-                $s3->put($fileLocation2, file_get_contents($documents), 'public');
-            }
+            //     $s3 = \Storage::disk('s3');
+            //     $fileLocation2 = $fileDirectory2. '/' . $fileName2;
+            //     $s3->put($fileLocation2, file_get_contents($documents), 'public');
+            // }
 
-
-            // $uid = $request->uid;
-            // $profile_picture = $request->profile_picture;
-            // $name = $request->name;
-            // $phone = $request->phone;
-            // $email = $request->email;
-            // $user_type = $request->user_type;
-            // $password = $request->password;
-            // $confirm_password = $request->confirm_password;
-            // $documents = $request->documents;
-            // $remarks = $request->remarks;
-            // $status = $request->status;
-
-            $staffdata = new Staff();
-            $staffdata-> uid = $uid;
+            $staffdata = new User();
             
-            if(isset($fileLocation1)){
-                $staffdata->profile_picture = $fileLocation1;
+            if(isset($fileLocation)){
+                $staffdata->profile_picture = $fileLocation;
             }
             $staffdata-> name = $name;
             $staffdata->phone = $phone;
             $staffdata->email = $email;
             $staffdata->user_type = $user_type;
             $staffdata->password = $password;
-            $staffdata->confirm_password = $confirm_password;
-
-            if(isset($fileLocation2)){
-                $staffdata->documents = $fileLocation2;
-            }
-          
             $staffdata->remarks  = $remarks;
             $staffdata->status = $status;
+
+            if(request::hasFile('documents'))
+            {
+                foreach($documents as $document)
+                {
+
+                    $fileName2 = uniqid() . '.' . $document->getClientOriginalExtension();
+                    $fileDirectory2 = 'uploads';
+                    $s3 = \Storage::disk('s3');
+                    $fileLocation2 = $fileDirectory2. '/' . $fileName2;
+                    $s3->put($fileLocation2, file_get_contents($document), 'public'); 
+                    $doc_img = new DocumentImages;               
+                    $doc_img->documents_url=$fileLocation2;
+                    $doc_img->document_id= $staffdata->uid;
+                    $doc_img->save();   
+                }
+               
+            }
             $staffdata->save();
+
             return $staffdata;
     
     }
 
     public function ViewStaff(Request $request){
-        $viewstaffs = Staff::orderby('id','DESC')->get();
+        $uid= request::input('uid');
+        $viewstaffs = User::orderby('uid','DESC')->get();
+        foreach($viewstaffs as $key=>$val){
+            {
+                $viewstaffs[$key]->profile_picture = 'https://bookmybuilder12.s3.ap-south-1.amazonaws.com/'.$viewstaffs[0]->profile_picture;
+                $viewstaffs[$key]->documents = 'https://bookmybuilder12.s3.ap-south-1.amazonaws.com/'.$viewstaffs[0]->documents;
+            }   
+         }
+       
           return $viewstaffs;
     }
 
-    public function StaffById(Request $request, $id){
-         $singlestaff = Staff::find($id);
+    public function StaffById(Request $request, $uid){
+         $singlestaff = User::find($uid);
          if(is_null($singlestaff)) {
              return response()->json(['message' => 'Staff not Found'],404);
          }
-         return response()->json($singlestaff::find($id), 200);
+         return response()->json($singlestaff::find($uid), 200);
     }
 
-    public function UpdateStaff(Request $request, $id){
-        $updatestaff = Staff::find($id);
+    public function UpdateStaff(Request $request, $uid){
+        $updatestaff = User::find($uid);
          if(is_null($updatestaff)) {
             return response()->json(['message' => 'Staff not Found'],404);
          }
@@ -116,8 +123,8 @@ class StaffController extends Controller
          return response($updatestaff, 200);
     }
 
-    public function DeleteStaff(Request $request, $id){
-        $deletestaff = Staff::find($id);
+    public function DeleteStaff(Request $request, $uid){
+        $deletestaff = User::find($uid);
         if(is_null($deletestaff)) {
             return response()->json(['message' => 'Staff not Found'],404);
          }

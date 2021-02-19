@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use Validator;
 use Storage;
 use Request;
-use App\Models\Alerts;
+use App\Models\Alert;
 
 class AlertController extends Controller
 {
@@ -15,7 +15,7 @@ class AlertController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'description' => 'required',
             'posted_by' => 'required',
-            'hyperlink' => 'required',
+            'hyper_link' => 'required',
            
         ]);
 
@@ -27,7 +27,7 @@ class AlertController extends Controller
             $image = request::file('image'); 
             $description = request::Input('description');
             $posted_by = request::Input('posted_by');
-            $hyperlink = request::Input('hyperlink'); 
+            $hyper_link = request::Input('hyper_link'); 
            
 
             if(request::hasFile('image')){
@@ -40,7 +40,7 @@ class AlertController extends Controller
             }
            
 
-            $alertdata = new Alerts();
+            $alertdata = new Alert();
             $alertdata-> title = $title;
             
             if(isset($fileLocation)){
@@ -48,7 +48,7 @@ class AlertController extends Controller
             }
             $alertdata-> description = $description;
             $alertdata-> posted_by = $posted_by;
-            $alertdata-> hyperlink = $hyperlink;
+            $alertdata-> hyper_link = $hyper_link;
            
             $alertdata->save();
             return $alertdata;
@@ -56,12 +56,18 @@ class AlertController extends Controller
     }
 
     public function ViewAlerts(Request $request){
-        $viewalerts = Alerts::orderby('id','DESC')->get();
+        $viewalerts = Alert::orderby('id','DESC')->get();
+        foreach($viewalerts as $key=>$val){
+            {
+                $viewalerts[$key]->image = 'https://bookmybuilder12.s3.ap-south-1.amazonaws.com/'.$viewalerts[0]->image;
+            }   
+         }
         return response()->json($viewalerts ,200 );
     }
 
     public function AlertById(Request $request, $id){
-        $singlealert = Alerts::find($id);
+        $singlealert = Alert::find($id);
+        
          if(is_null($singlealert)) {
              return response()->json(['message' => 'Alerts not Found'],404);
          }
@@ -69,7 +75,7 @@ class AlertController extends Controller
     }
 
     public function UpdateAlert(Request $request, $id){
-        $updatealert = Alerts::find($id);
+        $updatealert = Alert::find($id);
         if(is_null($updatealert)) {
            return response()->json(['message' => 'Alerts not Found'],404);
         }
@@ -77,7 +83,7 @@ class AlertController extends Controller
         return response($updatealert, 200);
     }
     public function DeleteAlert(Request $request, $id){
-        $deletealert = Alerts::find($id);
+        $deletealert = Alert::find($id);
         if(is_null($deletealert)) {
             return response()->json(['message' => 'Alerts not Found'],404);
          }

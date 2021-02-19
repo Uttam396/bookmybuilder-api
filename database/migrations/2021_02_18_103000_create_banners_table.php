@@ -17,7 +17,7 @@ class CreateBannersTable extends Migration
             $table->increments('id');
             $table->string('title');
             $table->string('banner_image');
-            $table->string('hyperlink');
+            $table->string('hyper_link');
             $table->timestamps();
         });
     }
